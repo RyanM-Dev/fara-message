@@ -23,7 +23,7 @@ func NewDatabase() {
 	if err != nil {
 		panic("failed to connect to database")
 	}
-	err = Mysql.db.AutoMigrate(&ChatTable{}, &ChatMember{}, &Message{}, &UserTable{})
+	err = Mysql.db.AutoMigrate(&ChatTable{}, &ChatMember{}, &Message{}, &UserTable{}, &ContactTable{})
 	if err != nil {
 		log.Printf("failed to migrate: %v", err)
 		return

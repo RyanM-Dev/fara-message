@@ -1,7 +1,11 @@
 package db
 
 import (
+	"errors"
 	"fmt"
+	"log"
+
+	"gorm.io/gorm"
 )
 
 func (d *Database) CreateUser(user User) error {
@@ -51,4 +55,89 @@ func (d *Database) DeleteUser(ID string) error {
 		return fmt.Errorf("failed to delete user: %w", result.Error)
 	}
 	return nil
+}
+
+func (d *Database) AddContact(userID, contactID string) error {
+	contact := ContactTable{
+		UserTableID: userID,
+		ContactID:   contactID,
+	}
+	repeatedContact, err := d.isContactExist(userID, contactID)
+	if err != nil {
+		return fmt.Errorf("failed to check if contact exists: %w", err)
+	}
+	if repeatedContact {
+		return errors.New("contact already exists")
+	}
+	if err := d.db.Create(&contact).Error; err != nil {
+		log.Println("create contact")
+		return fmt.Errorf("failed to add contact:%v", err)
+	}
+	return nil
+}
+
+func (d *Database) isContactExist(userID, contactID string) (bool, error) {
+	if userID == contactID {
+		return false, errors.New("user id  and contact id are the same")
+	}
+	contact := ContactTable{
+		UserTableID: userID,
+		ContactID:   contactID,
+	}
+	result := d.db.First(&contact, "user_table_id = ? AND contact_id = ?", userID, contactID)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			log.Println("record not found")
+			return false, nil
+		} else {
+			return false, fmt.Errorf("failed to find contact:%v", result.Error)
+
+		}
+
+	}
+	return true, nil
+}
+
+func (d *Database) GetContact(userID, contactID string) (ContactTable, error) {
+	var contact ContactTable
+	contactExistence, err := d.isContactExist(userID, contactID)
+	if err != nil {
+		return ContactTable{}, fmt.Errorf("failed to check if contact exists: %w", err)
+	}
+	if contactExistence {
+		if err := d.db.Model(&ContactTable{}).Where("user_table_id = ? AND contact_id = ?", userID, contactID).First(&contact).Error; err != nil {
+			return ContactTable{}, fmt.Errorf("failed to get contact: %w", err)
+		}
+	}
+	return ContactTable{}, errors.New("contact not found")
+}
+
+func (d *Database) GetUserContacts(userID string) ([]ContactTable, error) {
+	var contacts []ContactTable
+	if err := d.db.Model(&ContactTable{}).Where("user_table_id = ?", userID).Find(&contacts).Error; err != nil {
+		return contacts, fmt.Errorf("failed to get contacts:%w", err)
+	}
+	for i := range contacts {
+		user, err := d.ReadUser(contacts[i].ContactID)
+		if err != nil {
+			return []ContactTable{}, fmt.Errorf("failed to fill contact:%w", err)
+		}
+		contacts[i].Contact = user
+	}
+	return contacts, nil
+}
+
+func (d *Database) DeleteContact(userID, contactID string) error {
+	var contact ContactTable
+	contactExistence, err := d.isContactExist(userID, contactID)
+	if err != nil {
+		return fmt.Errorf("failed to check if contact exists: %w", err)
+	}
+	if contactExistence {
+		if err := d.db.Model(&ContactTable{}).Where("user_table_id = ? AND contact_id = ?", userID, contactID).Delete(&contact).Error; err != nil {
+			return fmt.Errorf("failed to delete contact: %w", err)
+		}
+		return nil
+	}
+	return errors.New("contact for delete not found")
 }
