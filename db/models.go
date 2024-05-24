@@ -51,16 +51,6 @@ type UserTable struct {
 	DeletedTime sql.NullTime
 }
 
-type UserInfo struct {
-	ID          string    `json:"id"`
-	Username    string    `json:"username"`
-	FirstName   string    `json:"firstname"`
-	LastName    string    `json:"lastname"`
-	Gender      Gender    `json:"gender"`
-	DateOfBirth time.Time `json:"dateOfBirth"`
-	CreatedTime time.Time `json:"createdTime"`
-}
-
 type Chat struct {
 	ID          string
 	Name        string
@@ -102,16 +92,11 @@ var (
 	Unknown = ChatType{chatType: -1}
 )
 
-func ConvertUserToUserInfo(user User) UserInfo {
-	return UserInfo{
-		ID:          user.ID.String(),
-		Username:    user.Username,
-		FirstName:   user.FirstName,
-		LastName:    user.LastName,
-		Gender:      user.Gender,
-		DateOfBirth: user.DateOfBirth,
-		CreatedTime: user.CreatedTime,
-	}
+type ContactTable struct {
+	UserTableID string `gorm:"type:varchar(255)"`
+	UserTable   UserTable
+	ContactID   string `gorm:"type:varchar(255)"`
+	Contact     UserTable
 }
 
 func ConvertUserToUserTable(user User) UserTable {

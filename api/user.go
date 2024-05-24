@@ -100,3 +100,60 @@ func DeleteUserHandler(c *gin.Context) {
 	})
 
 }
+
+func addContactHandler(c *gin.Context) {
+	authorizationHeader := c.GetHeader("Authorization")
+	userID, err := ValidateToken(authorizationHeader)
+	if err != nil {
+		log.Printf("error validating token: %v", err)
+		c.Status(400)
+		return
+	}
+	contactID := c.Param("id")
+	if err := db.Mysql.AddContact(userID, contactID); err != nil {
+		log.Printf("failed to add contact:%v", err)
+		c.JSON(400, gin.H{
+			"error": fmt.Sprintf("%v", err),
+		})
+		return
+	}
+	c.JSON(200, "contact added successfully")
+}
+func GetUserContactsHandler(c *gin.Context) {
+	authorizationHeader := c.GetHeader("Authorization")
+	userID, err := ValidateToken(authorizationHeader)
+	if err != nil {
+		log.Printf("error validating token: %v", err)
+		c.Status(400)
+		return
+	}
+	contacts, err := db.Mysql.GetUserContacts(userID)
+	if err != nil {
+		log.Printf("failed to get contacts:%v", err)
+		c.JSON(400, gin.H{
+			"error": fmt.Sprintf("%v", err),
+		})
+		return
+	}
+
+	c.JSON(200, contacts)
+}
+
+func DeleteContactHandler(c *gin.Context) {
+	authorizationHeader := c.GetHeader("Authorization")
+	userID, err := ValidateToken(authorizationHeader)
+	if err != nil {
+		log.Printf("error validating token: %v", err)
+		c.Status(400)
+		return
+	}
+	contactID := c.Param("id")
+	if err := db.Mysql.DeleteContact(userID, contactID); err != nil {
+		log.Printf("failed to delete contact:%v", err)
+		c.JSON(400, gin.H{
+			"error": fmt.Sprintf("%v", err),
+		})
+		return
+	}
+	c.JSON(200, "contact deleted successfully")
+}
