@@ -14,11 +14,18 @@ func (d *Database) SendMessage(senderID string, chatID string, content string) e
 	return nil
 }
 
-func (d *Database) DeleteMessage(messageID int) error {
-	var message Message
-	result := d.db.Where("ID=?", messageID).Delete(&message)
+func (d *Database) DeleteMessage(message Message) error {
+	result := d.db.Where("ID=?", message.ID).Delete(&message)
 	if result.Error != nil {
 		return fmt.Errorf("error deleting message: %w", result.Error)
 	}
 	return nil
+}
+
+func (d *Database) GetUserMessage(messageID int, userID string) (Message, error) {
+	var message Message
+	if err := d.db.Where("ID=?", messageID).Where("user_table_id = ?", userID).First(&message).Error; err != nil {
+		return message, err
+	}
+	return message, nil
 }

@@ -48,9 +48,6 @@ func (d *Database) NewChat(chatName string, chatType ChatType, userTable []UserT
 			return "", fmt.Errorf("error generating chat member for chat : %v", err)
 		}
 
-		if err != nil {
-			return "", fmt.Errorf("error generating ID for direct chat : %v", err)
-		}
 	}
 	if chatType == Group {
 		guid := xid.New()
