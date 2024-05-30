@@ -13,7 +13,7 @@ func RunWebServer(port int) error {
 	router.POST("/login", loginHandler)
 	router.Use(AuthMiddlewareHandler)
 	router.POST("/user/info", ReadUserHandler)
-	router.POST("/change_password", changePassword)
+	router.POST("user/change_password", changePassword)
 	router.POST("/user/update", UpdateUserHandler)
 	router.DELETE("/user/delete", DeleteUserHandler)
 	router.POST("/user/edit", editUser)
@@ -27,7 +27,6 @@ func RunWebServer(port int) error {
 	router.POST("/chat/group", NewGroupChatHandler)
 	router.GET("/chat/:id", GetChatMessagesHandler)
 	router.GET("/user/chat/list", GetUsersChatsHandler)
-
 	err := router.Run(addr)
 	return err
 }
