@@ -24,7 +24,7 @@ func (d *Database) DeleteMessage(message Message) error {
 
 func (d *Database) GetUserMessage(messageID int, userID string) (Message, error) {
 	var message Message
-	if err := d.db.Where("ID=?", messageID).Where("user_table_id = ?", userID).First(&message).Error; err != nil {
+	if err := d.db.Preload("UserTable").Preload("chat_tables").Where("ID=?", messageID).Where("user_table_id = ?", userID).First(&message).Error; err != nil {
 		return message, err
 	}
 	return message, nil

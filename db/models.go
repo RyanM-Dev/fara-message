@@ -35,6 +35,7 @@ type User struct {
 	LastName    string
 	Password    string
 	Gender      Gender
+	Email       string
 	DateOfBirth time.Time
 	CreatedTime time.Time
 	DeletedTime time.Time
@@ -46,7 +47,8 @@ type UserTable struct {
 	LastName    string
 	Password    string
 	Gender      int8
-	DateOfBirth time.Time
+	Email       string    `gorm:"type:varchar(255)"`
+	DateOfBirth time.Time `gorm:"type:date"`
 	CreatedTime time.Time
 	DeletedTime sql.NullTime
 }
@@ -116,6 +118,7 @@ func ConvertUserToUserTable(user User) UserTable {
 		LastName:    user.LastName,
 		Password:    user.Password,
 		Gender:      gender,
+		Email:       user.Email,
 		DateOfBirth: user.DateOfBirth,
 		CreatedTime: user.CreatedTime,
 	}

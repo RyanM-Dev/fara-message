@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ type RegisterForm struct {
 	ConfirmPassword string `json:"confirm_password"`
 	Gender          string `json:"gender"`
 	DateOfBirth     string `json:"date_of_birth"`
+	Email           string `json:"email"`
 }
 
 type tokenJSON struct {
@@ -36,7 +38,9 @@ func RegisterHandler(c *gin.Context) {
 	}
 	err = validateUser(requestBody)
 	if err != nil {
-		log.Print("failed to validate user: ", err)
+		c.JSON(400, gin.H{
+			"error": fmt.Sprintf("failed to validate: %v", err),
+		})
 		return
 	}
 
@@ -95,6 +99,9 @@ func validateUser(form RegisterForm) error {
 	if form.Password != form.ConfirmPassword {
 		return errors.New("password does not match")
 	}
+	if !IsValidEmail(form.Email) {
+		return errors.New("please insert a valid email address")
+	}
 
 	return nil
 }
@@ -112,8 +119,8 @@ func assignGender(sex string) db.Gender {
 
 }
 func convertRegisterFormToUser(form RegisterForm) (db.User, error) {
-	layout := "2006-01-02 15:04:05"
-	convertTime, err := time.Parse(layout, form.DateOfBirth)
+	// time.DateOnly
+	convertTime, err := time.Parse(time.DateOnly, form.DateOfBirth)
 	if err != nil {
 		return db.User{}, fmt.Errorf("failed to parse date %w", err)
 	}
@@ -128,6 +135,7 @@ func convertRegisterFormToUser(form RegisterForm) (db.User, error) {
 		LastName:    form.LastName,
 		Password:    password,
 		Gender:      gender,
+		Email:       form.Email,
 		DateOfBirth: convertTime,
 		CreatedTime: time.Now(),
 		DeletedTime: time.Time{},
@@ -154,6 +162,8 @@ func CheckRepeatedUser(username string) (bool, error) {
 	return result, err
 }
 
-// func generateID() (string, error) {
-
-// }
+func IsValidEmail(email string) bool {
+	const emailRegexPattern = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	re := regexp.MustCompile(emailRegexPattern)
+	return re.MatchString(email)
+}
