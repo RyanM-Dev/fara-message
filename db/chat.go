@@ -64,7 +64,7 @@ func (d *Database) NewChat(chatName string, chatType ChatType, userTable []UserT
 
 func (d *Database) GetChatMessages(ChatID string) ([]Message, error) {
 	var messages []Message
-	if err := d.db.Where("chat_table_id = ?", ChatID).Find(&messages).Error; err != nil {
+	if err := d.db.Preload("UserTable").Preload("ChatTable").Where("chat_table_id = ?", ChatID).Find(&messages).Error; err != nil {
 		return nil, fmt.Errorf("no  message found for chat %w", err)
 	}
 	return messages, nil
@@ -72,7 +72,7 @@ func (d *Database) GetChatMessages(ChatID string) ([]Message, error) {
 
 func (d *Database) GetUsersChatMembers(userID string) ([]ChatMember, error) {
 	var userChatMembers []ChatMember
-	if err := d.db.Where("user_table_id = ?", userID).Find(&userChatMembers).Error; err != nil {
+	if err := d.db.Preload("UserTable").Preload("ChatTable").Where("user_table_id = ?", userID).Find(&userChatMembers).Error; err != nil {
 		return nil, fmt.Errorf("no  chat found for user %w", err)
 	}
 	return userChatMembers, nil

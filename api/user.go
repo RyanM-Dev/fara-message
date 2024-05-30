@@ -27,8 +27,6 @@ func ReadUserHandler(c *gin.Context) {
 		return
 	}
 	RegisterForm := convertUserTableToRegisterForm(userTable)
-	RegisterForm.Password = ""
-	RegisterForm.ConfirmPassword = ""
 	c.JSON(http.StatusOK, RegisterForm)
 
 }
@@ -127,7 +125,7 @@ func GetUserContactsHandler(c *gin.Context) {
 		c.Status(400)
 		return
 	}
-	contacts, err := db.Mysql.GetUserContacts(userID)
+	contactsDB, err := db.Mysql.GetUserContacts(userID)
 	if err != nil {
 		log.Printf("failed to get contacts:%v", err)
 		c.JSON(400, gin.H{
@@ -135,8 +133,16 @@ func GetUserContactsHandler(c *gin.Context) {
 		})
 		return
 	}
+	var contacts []Contact
+	for _, v := range contactsDB {
+		contacts = append(contacts, convertContactTableToContact(v))
+	}
 
-	c.JSON(200, contacts)
+	contactResponse := ContactResponse{
+		Contacts: contacts,
+	}
+
+	c.JSON(200, contactResponse)
 }
 
 func DeleteContactHandler(c *gin.Context) {

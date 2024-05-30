@@ -19,7 +19,7 @@ func (d *Database) CreateUser(user User) error {
 
 func (d *Database) ReadUserByUsername(username string) (UserTable, error) {
 	var user UserTable
-	result := d.db.First(&user, "username=?", username)
+	result := d.db.Where("username	 = ?", username).First(&user)
 	if result.Error != nil {
 		return user, fmt.Errorf("failed to read user: %w", result.Error)
 	}
@@ -28,7 +28,9 @@ func (d *Database) ReadUserByUsername(username string) (UserTable, error) {
 
 func (d *Database) ReadUser(ID string) (UserTable, error) {
 	var user UserTable
-	result := d.db.First(&user, "ID = ?", ID)
+	result := d.db.Select("id", "username", "first_name", "last_name", "gender", "email", "date_of_birth", "created_time").
+		Where("id = ?", ID).
+		First(&user)
 	if result.Error != nil {
 		return user, fmt.Errorf("failed to read user: %w", result.Error)
 	}
@@ -114,7 +116,7 @@ func (d *Database) GetContact(userID, contactID string) (ContactTable, error) {
 
 func (d *Database) GetUserContacts(userID string) ([]ContactTable, error) {
 	var contacts []ContactTable
-	if err := d.db.Model(&ContactTable{}).Where("user_table_id = ?", userID).Find(&contacts).Error; err != nil {
+	if err := d.db.Model(&ContactTable{}).Preload("Contact").Where("user_table_id = ?", userID).Find(&contacts).Error; err != nil {
 		return contacts, fmt.Errorf("failed to get contacts:%w", err)
 	}
 	for i := range contacts {
