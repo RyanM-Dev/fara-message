@@ -7,7 +7,6 @@ import (
 
 	"github.com/mhghw/fara-message/api"
 	"github.com/mhghw/fara-message/db"
-	"github.com/rs/xid"
 )
 
 // implement this with os args
@@ -15,10 +14,15 @@ var port = flag.Int("port", 8080, "Port to run the HTTP server")
 
 func main() {
 	db.NewDatabase()
-	guid := xid.New()
-	fmt.Println(guid.String())
 	flag.Parse()
-	err := api.RunWebServer(*port)
+	// err := api.RunWebServer(*port)
+	// if err != nil {
+	// 	log.Print("failed to start HTTP server:", err)
+	// }
+	webServer := api.NewWebServer()
+	addr := fmt.Sprintf(":%d", *port)
+	fmt.Println("address is:", addr)
+	err := webServer.Run(addr)
 	if err != nil {
 		log.Print("failed to start HTTP server:", err)
 	}
