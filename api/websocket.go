@@ -1,8 +1,10 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -10,12 +12,12 @@ import (
 )
 
 type Hub struct {
-	chatID      string
 	clients     map[string]*Client
 	chatClients map[string][]*Client
 	broadcast   chan Message
 	register    chan *Client
 	unregister  chan *Client
+	mu          sync.Mutex
 }
 
 type Client struct {
@@ -99,6 +101,13 @@ func serveWs(hub *Hub, c *gin.Context) {
 }
 
 func (h *Hub) sendMessage(msg Message) error {
+	exist, err := db.Mysql.CheckChatMemberExists(msg.SenderID, msg.ChatID)
+	if err != nil {
+		return fmt.Errorf("failed to check chat member existence:%v", err)
+	}
+	if !exist {
+		return fmt.Errorf("chat member does not exist")
+	}
 	dbMessage, err := db.Mysql.SendMessage(msg.SenderID, msg.ChatID, msg.Content)
 	if err != nil {
 		log.Printf("failed to write message in database: %v", err)

@@ -1,6 +1,8 @@
 package api
 
 import (
+	"sync"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -9,8 +11,20 @@ type WebServer struct {
 	router *gin.Engine
 }
 
+var (
+	hubInstance *Hub
+	once        sync.Once
+)
+
+func GetHub() *Hub {
+	once.Do(func() {
+		hubInstance = newHub()
+	})
+	return hubInstance
+}
+
 func NewWebServer() *WebServer {
-	hub := newHub()
+	hub := GetHub()
 	router := gin.New()
 	server := &WebServer{
 		hub:    hub,
@@ -27,11 +41,11 @@ func NewWebServer() *WebServer {
 	router.POST("/user/contact/:id", addContactHandler)
 	router.DELETE("/user/contact/:id", DeleteContactHandler)
 	router.GET("/user/contact", GetUserContactsHandler)
-
 	router.POST("/send/message", SendMessageHandler)
 	router.DELETE("/delete/message", DeleteMessageHandler)
 	router.POST("/chat/direct", NewDirectChatHandler)
 	router.POST("/chat/group", NewGroupChatHandler)
+	router.POST("/user/add/group", AddToGroupChatHandler)
 	router.GET("/chat/:id", GetChatMessagesHandler)
 	router.GET("/user/chat/list", GetUsersChatsHandler)
 	router.GET("/user/ws", func(c *gin.Context) {

@@ -51,14 +51,14 @@ func convertUserTableToRegisterForm(user db.UserTable) RegisterForm {
 	gender := ConvertGenderToString(user.Gender)
 	formattedTime := user.DateOfBirth.Format(time.DateOnly)
 	result := RegisterForm{
-		Username:        user.Username,
-		FirstName:       user.FirstName,
-		LastName:        user.LastName,
-		Password:        user.Password,
-		ConfirmPassword: user.Password,
-		Gender:          gender,
-		Email:           user.Email,
-		DateOfBirth:     formattedTime,
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		// Password:        user.Password,
+		// ConfirmPassword: user.Password,
+		Gender:      gender,
+		Email:       user.Email,
+		DateOfBirth: formattedTime,
 	}
 	return result
 }

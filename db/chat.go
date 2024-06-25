@@ -62,6 +62,29 @@ func (d *Database) NewChat(chatName string, chatType ChatType, userTable []UserT
 	return chatID, nil
 }
 
+func (d *Database) AddToGroupChat(chatID, userID, adminID string) error {
+	var chatTable ChatTable
+	var chatMember ChatMember
+	err := d.db.Where("user_table_id = ? AND chat_table_id = ?", adminID, chatID).First(&chatMember).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return fmt.Errorf("you're not authorized to add to group chat : %v", err)
+		}
+	}
+	userTable, err := d.ReadUser(userID)
+	if err != nil {
+		return fmt.Errorf("error reading user to add to group chat: %v", err)
+	}
+	d.db.Where("id= ?", chatID).First(&chatTable)
+	var userTables []UserTable
+	userTables = append(userTables, userTable)
+	err = d.generateChatMemberForChat(userTables, chatTable)
+	if err != nil {
+		return fmt.Errorf("failed to generate chat member: %v", err)
+	}
+	return nil
+}
+
 func (d *Database) GetChatMessages(ChatID string) ([]Message, error) {
 	var messages []Message
 	if err := d.db.Preload("UserTable").Preload("ChatTable").Where("chat_table_id = ?", ChatID).Find(&messages).Error; err != nil {
@@ -167,4 +190,16 @@ func (d *Database) generateChatMemberForChat(userTable []UserTable, chatTable Ch
 	}
 	return nil
 
+}
+
+func (d *Database) CheckChatMemberExists(userID, chatID string) (bool, error) {
+	var chatMember ChatMember
+	err := d.db.Where("user_table_id = ? AND chat_table_id = ?", userID, chatID).First(&chatMember).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, nil
+		}
+		return false, fmt.Errorf("failed to find chat member:%v", err)
+	}
+	return true, nil
 }

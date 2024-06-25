@@ -18,8 +18,8 @@ type RegisterForm struct {
 	Username        string `json:"username"`
 	FirstName       string `json:"first_name"`
 	LastName        string `json:"last_name"`
-	Password        string `json:"password"`
-	ConfirmPassword string `json:"confirm_password"`
+	Password        string `json:"password,omitempty"`
+	ConfirmPassword string `json:"confirm_password,omitempty"`
 	Gender          string `json:"gender"`
 	DateOfBirth     string `json:"date_of_birth"`
 	Email           string `json:"email"`
