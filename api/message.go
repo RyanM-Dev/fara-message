@@ -80,36 +80,3 @@ func DeleteMessageHandler(c *gin.Context) {
 		"message": "message deleted successfully",
 	})
 }
-
-// var upgrader = websocket.Upgrader{
-// 	ReadBufferSize:  1024,
-// 	WriteBufferSize: 1024,
-// 	CheckOrigin: func(r *http.Request) bool {
-// 		return true
-// 	},
-// }
-
-// func websocketMessageHandler(c *gin.Context) {
-// 	var message Message
-// 	if err := c.BindJSON(&message); err != nil {
-// 		log.Printf("error binding json:%v", err)
-// 		c.Status(400)
-// 		return
-// 	}
-
-// 	authorizationHeader := c.GetHeader("Authorization")
-// 	userID, err := ValidateToken(authorizationHeader)
-// 	if err != nil {
-// 		log.Printf("error get ID:%v", err)
-// 		c.Status(400)
-// 		return
-// 	}
-
-// 	err = db.Mysql.SendMessage(userID, message.ChatID, message.Content)
-// 	if err != nil {
-// 		log.Printf("error:%v", err)
-// 		c.Status(400)
-// 		return
-// 	}
-
-// }

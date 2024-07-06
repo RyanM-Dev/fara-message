@@ -85,6 +85,25 @@ func (d *Database) AddToGroupChat(chatID, userID, adminID string) error {
 	return nil
 }
 
+func (d *Database) RemoveFromGroupChat(userID, chatID, adminID string) error {
+	// var chatTable ChatTable
+	var chatMember ChatMember
+	var admin ChatMember
+
+	err := d.db.Where("user_table_id = ? AND chat_table_id = ?", adminID, chatID).First(&admin).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return fmt.Errorf("you're not authorized to add to group chat : %v", err)
+		}
+		return fmt.Errorf("failed to get chat member: %v", err)
+	}
+	err = d.db.Where("user_table_id = ? AND chat_table_id = ?", userID, chatID).Delete(&chatMember).Error
+	if err != nil {
+		return fmt.Errorf("failed to delete chat member: %v", err)
+	}
+	return nil
+}
+
 func (d *Database) GetChatMessages(ChatID string) ([]Message, error) {
 	var messages []Message
 	if err := d.db.Preload("UserTable").Preload("ChatTable").Where("chat_table_id = ?", ChatID).Find(&messages).Error; err != nil {

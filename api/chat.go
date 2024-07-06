@@ -116,6 +116,7 @@ func AddToGroupChatHandler(c *gin.Context) {
 	userID, err := ValidateToken(tokenString)
 	if err != nil {
 		log.Printf("failed to find user by token: %v", err)
+		return
 	}
 	err = c.BindJSON(&reqBody)
 	if err != nil {
@@ -134,12 +135,42 @@ func AddToGroupChatHandler(c *gin.Context) {
 		c.JSON(400, gin.H{
 			"error": fmt.Errorf("no user found: %v", err),
 		})
+		return
 	}
 	var userTables = []db.UserTable{userTable}
 	UpdateChatClientList(userTables, reqBody.ChatID)
 
 	c.JSON(200, gin.H{
 		"status": "user added successfully",
+	})
+}
+
+func RemoveFromGroupChatHandler(c *gin.Context) {
+	type requestBody struct {
+		ChatID string `json:"chat_id"`
+		UserID string `json:"user_id"`
+	}
+	var reqBody requestBody
+	tokenString := c.GetHeader("Authorization")
+
+	userID, err := ValidateToken(tokenString)
+	if err != nil {
+		log.Printf("failed to find user by token: %v", err)
+	}
+	err = c.BindJSON(&reqBody)
+	if err != nil {
+		log.Print("failed to bind json, ", err)
+		return
+	}
+	err = db.Mysql.RemoveFromGroupChat(reqBody.UserID, reqBody.ChatID, userID)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": err,
+		})
+		return
+	}
+	c.JSON(200, gin.H{
+		"message": fmt.Sprintf("user %v has been removed", reqBody.UserID),
 	})
 }
 
