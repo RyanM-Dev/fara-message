@@ -50,7 +50,7 @@ func NewDirectChatHandler(c *gin.Context) {
 		return
 	}
 
-	UpdateChatClientList(userTables, chatID)
+	UpdateChatClientList(userTables, chatID, true)
 
 	log.Print("direct chat created")
 	c.JSON(200, chatID)
@@ -100,7 +100,7 @@ func NewGroupChatHandler(c *gin.Context) {
 		log.Printf("failed to create chat: %v", err)
 		return
 	}
-	UpdateChatClientList(userTables, chatID)
+	UpdateChatClientList(userTables, chatID, true)
 
 	c.JSON(200, chatID)
 }
@@ -138,7 +138,7 @@ func AddToGroupChatHandler(c *gin.Context) {
 		return
 	}
 	var userTables = []db.UserTable{userTable}
-	UpdateChatClientList(userTables, reqBody.ChatID)
+	UpdateChatClientList(userTables, reqBody.ChatID, true)
 
 	c.JSON(200, gin.H{
 		"status": "user added successfully",
@@ -169,6 +169,16 @@ func RemoveFromGroupChatHandler(c *gin.Context) {
 		})
 		return
 	}
+	userTable, err := db.Mysql.ReadUser(reqBody.UserID)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": fmt.Errorf("no user found: %v", err),
+		})
+		return
+	}
+	var userTables = []db.UserTable{userTable}
+
+	UpdateChatClientList(userTables, reqBody.ChatID, false)
 	c.JSON(200, gin.H{
 		"message": fmt.Sprintf("user %v has been removed", reqBody.UserID),
 	})
@@ -226,25 +236,4 @@ func DirectChatIDGenerator(users []db.User) (string, error) {
 	hashID := hash(concatenatedID)
 	return hashID, nil
 
-}
-
-func UpdateChatClientList(users []db.UserTable, chatID string) {
-	hub := GetHub()
-	hub.mu.Lock()
-	defer hub.mu.Unlock()
-	var clients []*Client
-	for _, user := range users {
-		client, exists := hub.clients[user.ID]
-		if exists {
-			clients = append(clients, client)
-		} else {
-			log.Printf("User %s is not connected", user.ID)
-		}
-	}
-	if _, ok := hub.chatClients[chatID]; !ok {
-		hub.chatClients[chatID] = []*Client{}
-	}
-	for _, client := range clients {
-		hub.chatClients[chatID] = append(hub.chatClients[chatID], client)
-	}
 }

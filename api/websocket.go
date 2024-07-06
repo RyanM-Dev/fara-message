@@ -182,3 +182,39 @@ func (h *Hub) addClientToChatClients(client *Client) error {
 	log.Println("client added to chat map")
 	return nil
 }
+
+func UpdateChatClientList(users []db.UserTable, chatID string, addOrRemove bool) {
+	hub := GetHub()
+	hub.mu.Lock()
+	defer hub.mu.Unlock()
+	var clients []*Client
+	for _, user := range users {
+		client, exists := hub.clients[user.ID]
+		if exists {
+			clients = append(clients, client)
+		} else {
+			log.Printf("User %s is not connected", user.ID)
+		}
+	}
+	if _, ok := hub.chatClients[chatID]; !ok {
+		hub.chatClients[chatID] = []*Client{}
+	}
+	switch addOrRemove {
+	case true:
+		for _, client := range clients {
+			hub.chatClients[chatID] = append(hub.chatClients[chatID], client)
+		}
+	case false:
+		clients = hub.chatClients[chatID]
+		for i, client := range clients {
+			for _, user := range users {
+				if user.ID == client.user.ID {
+					clients = append(clients[:i], clients[i+1:]...)
+				}
+
+			}
+		}
+		hub.chatClients[chatID] = clients
+
+	}
+}
