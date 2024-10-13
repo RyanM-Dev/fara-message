@@ -1,0 +1,27 @@
+version: "3"
+services:
+  fara-message:
+    build: .
+    container_name: fara-message
+    depends_on:
+      - mysql-db
+    ports:
+      - 8080:8080
+    environment:
+      - MYSQL_HOST=mysql-db
+      - MYSQL_DATABASE=fara-message
+      - MYSQL_USER=ryan
+      - MYSQL_PASSWORD=831374
+      - MYSQL_ROOT_PASSWORD=831374
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      - MYSQL_DATABASE=fara-message
+      - MYSQL_USER=ryan
+      - MYSQL_PASSWORD=831374
+      - MYSQL_ROOT_PASSWORD=831374
+    volumes:
+      - mysql-fara-message:/var/lib/mysql
+volumes:
+  mysql-fara-message:

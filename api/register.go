@@ -68,7 +68,11 @@ func RegisterHandler(c *gin.Context) {
 		Token: token,
 	}
 
-	db.Mysql.CreateUser(user)
+	err = db.Mysql.CreateUser(user)
+	if err != nil {
+		c.JSON(400, "failed to create user")
+		return
+	}
 	c.JSON(http.StatusOK, userToken.Token)
 }
 
@@ -147,7 +151,7 @@ func convertRegisterFormToUser(form RegisterForm) (db.User, error) {
 func CheckRepeatedUser(username string) (bool, error) {
 	result := true
 	var err error
-	err = nil
+	// err = nil
 	_, err = db.Mysql.ReadUserByUsername(username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
